@@ -3,7 +3,7 @@ import { Place } from "../types";
 import { BookmarkButton } from "./ui/BookmarkButton";
 import { MatchBadge } from "./ui/MatchBadge";
 import { StarRating } from "./ui/StarRating";
-
+import  MapViewWrapper  from "./MapViewWrapper";
 interface DetailScreenProps {
   place: Place;
   saved: boolean;
@@ -59,6 +59,9 @@ export function DetailScreen({
             <MatchBadge score={place.matchScore} />
           </div>
         </div>
+
+        {/* Map */}
+        <MapViewWrapper place={place} zoom={15} />
 
         {/* Name & meta */}
         <h1
@@ -132,13 +135,29 @@ export function DetailScreen({
         </div>
 
         <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          {/* Google Maps Navigation Button */}
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               setMapsClicked(true);
-              if (place.coordinates) {
-                const url = `https://www.openstreetmap.org/?mlat=${place.coordinates.y}&mlon=${place.coordinates.x}#map=17/${place.coordinates.y}/${place.coordinates.x}`;
-                window.open(url, '_blank');
+              try {
+                const getCurrentPosition = () =>
+                  new Promise<GeolocationPosition>((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject);
+                  });
+                const pos = await getCurrentPosition();
+                const originLat = pos.coords.latitude;
+                const originLng = pos.coords.longitude;
+                const destLat = place.coordinates?.y ?? pos.coords.latitude;
+                const destLng = place.coordinates?.x ?? pos.coords.longitude;
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`;
+                window.open(url, "_blank");
+              } catch (e) {
+                // Fallback to OpenStreetMap if geolocation fails
+                if (place.coordinates) {
+                  const url = `https://www.openstreetmap.org/?mlat=${place.coordinates.y}&mlon=${place.coordinates.x}#map=17/${place.coordinates.y}/${place.coordinates.x}`;
+                  window.open(url, "_blank");
+                }
               }
               setTimeout(() => setMapsClicked(false), 2000);
             }}
@@ -167,7 +186,7 @@ export function DetailScreen({
               </>
             ) : (
               <>
-                <span>Open in OpenStreetMap</span>
+                <span>Open in Google Maps</span>
                 <svg
                   width="12"
                   height="12"

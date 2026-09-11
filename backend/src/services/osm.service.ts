@@ -3,7 +3,7 @@ import axios from 'axios';
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
 const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
 
-// Ensure a user agent is set as required by Nominatim's usage policy
+// Ensure a user agent is set as required by Nominatim's and Overpass API's usage policies
 const HEADERS = {
   'User-Agent': 'RoamlyApp/1.0 (Student Project)',
 };
@@ -70,7 +70,6 @@ export const searchNearbyPlaces = async (
   amenities: string[]
 ): Promise<OverpassNode[]> => {
   // Build Overpass QL query
-  // Example: node["amenity"~"cafe|restaurant"](around:radius,lat,lon);
   const amenityRegex = amenities.join('|');
   const query = `
     [out:json];
@@ -86,6 +85,8 @@ export const searchNearbyPlaces = async (
     const response = await axios.post(OVERPASS_API_URL, `data=${encodeURIComponent(query)}`, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': HEADERS['User-Agent'], // 💡 FIX: Include User-Agent header here
+        'Accept': 'application/json',
       },
     });
 

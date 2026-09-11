@@ -9,59 +9,73 @@ export interface IRecommendationService {
   reverseGeocode(lat: number, lng: number): Promise<string | null>;
 }
 
+// Helper to map UI time string to backend's required format
+const mapTimeToBackendFormat = (timeStr: string): string => {
+  const normalized = timeStr.toLowerCase().replace(/\s+/g, '_');
+  if (normalized.includes('1') || normalized === '1_hour') return '1_hour';
+  if (normalized.includes('3') || normalized === '3_hours') return '3_hours';
+  if (normalized.includes('half') || normalized === 'half_day') return 'half_day';
+  if (normalized.includes('full') || normalized === 'full_day') return 'full_day';
+  return '3_hours'; // Fallback default
+}; 
+
 class RecommendationService implements IRecommendationService {
-  async getRecommendations(query: RecommendationQuery): Promise<Place[]> {
-    try {
-      const { time, mood, preferenceText, latitude, longitude } = query;
-      
-      // Default coordinates if not provided (e.g., fallback for testing without location)
-      const lat = latitude || 40.7128; // default to NYC if none
-      const lng = longitude || -74.0060;
 
-      const response = await fetch(`${API_BASE_URL}/recommendations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          latitude: lat,
-          longitude: lng,
-          availableTime: time,
-          mood,
-          preferences: preferenceText
-        }),
-      });
+async getRecommendations(query: RecommendationQuery): Promise<Place[]> {
+  try {
+    const { time, mood, preferenceText, latitude, longitude } = query;
+    
+    const lat = latitude ?? 40.7128;
+    const lng = longitude ?? -74.0060;
 
-      if (!response.ok) {
-        throw new Error(`Error fetching recommendations: ${response.statusText}`);
-      }
+    const response = await fetch(`${API_BASE_URL}/recommendations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        latitude: Number(lat),
+        longitude: Number(lng),
+        availableTime: mapTimeToBackendFormat(time || '3_hours'), // Matches backend expectations
+        mood: mood || 'relaxed',
+        preferences: preferenceText || "",
+      }),
+    });
 
-      const data = await response.json();
-      
-      return data.places.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        category: p.category,
-        categoryEmoji: "📍", // Default emoji
-        rating: p.rating,
-        distance: p.distance,
-        visitDuration: time,
-        description: p.description,
-        matchScore: Math.floor(Math.random() * 20) + 80, // 80-99% pseudo score
-        matchReason: `Matches your ${mood} mood perfectly.`,
-        image: p.imageUrl,
-        bestFor: [mood, p.category],
-        coordinates: {
-          x: p.coordinates.lng,
-          y: p.coordinates.lat,
-          label: p.name
-        }
-      }));
-    } catch (error) {
-      console.error("Error in getRecommendations:", error);
-      return []; // Return empty array or throw error depending on desired UX
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
     }
+
+    const data = await response.json();
+    const placesArray = data.places || [];
+
+    return placesArray.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category || "Point of Interest",
+      categoryEmoji: "📍",
+      rating: p.rating || 4.5,
+      distance: p.distance || "Nearby",
+      visitDuration: time,
+      description: p.description,
+      matchScore: Math.floor(Math.random() * 20) + 80,
+      matchReason: `Matches your ${mood} mood perfectly.`,
+      image: p.image || "/placeholder-place.jpg",
+      bestFor: [mood, p.category].filter(Boolean),
+      latitude: p.coordinates?.lat || lat,
+      longitude: p.coordinates?.lng || lng,
+      // Use backend-provided coordinates (x, y)
+      coordinates: {
+        x: p.coordinates?.x ?? p.longitude ?? lng,
+        y: p.coordinates?.y ?? p.latitude ?? lat,
+        label: p.name,
+      },
+    }));
+  } catch (error) {
+    console.error("Error in getRecommendations:", error);
+    throw error;
   }
+}
 
   async getPlaceById(id: string): Promise<Place | undefined> {
     // In a real app, this might call a specific endpoint like /api/places/:id
