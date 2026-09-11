@@ -13,9 +13,9 @@ export function BookmarkButton({
         onToggle();
       }}
       aria-label={saved ? "Remove from saved" : "Save place"}
-      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-xs ${
+      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
         saved
-          ? "bg-primary text-primary-foreground hover:bg-accent"
+          ? "bg-primary text-primary-foreground"
           : "bg-secondary text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >

@@ -6,19 +6,16 @@ interface SavedScreenProps {
   savedIds: Set<string>;
   onToggleSave: (id: string) => void;
   onPlaceClick: (place: Place) => void;
-  onExploreClick: () => void;
 }
 
 export function SavedScreen({
   savedPlaces,
-  savedIds,
   onToggleSave,
   onPlaceClick,
-  onExploreClick,
 }: SavedScreenProps) {
   return (
     <main className="flex-1 overflow-y-auto">
-      <div className="max-w-6xl mx-auto px-5 md:px-8 py-8 md:py-10">
+      <div className="max-w-6xl mx-auto px-5 md:px-8 py-10">
         <div className="mb-8">
           <p className="text-[11px] font-semibold tracking-widest text-accent uppercase mb-2">
             Your collection
@@ -35,8 +32,8 @@ export function SavedScreen({
         </div>
 
         {savedPlaces.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 md:py-28 text-center max-w-sm mx-auto">
-            <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center mb-4 shadow-xs">
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-4">
               <svg
                 width="22"
                 height="22"
@@ -51,22 +48,14 @@ export function SavedScreen({
               </svg>
             </div>
             <h3
-              className="text-[16px] font-semibold text-foreground mb-1.5"
+              className="text-[16px] font-semibold text-foreground mb-2"
               style={{ fontFamily: "var(--font-display)" }}
             >
               No saved places yet.
             </h3>
-            <p className="text-[14px] text-muted-foreground mb-6 leading-relaxed">
+            <p className="text-[14px] text-muted-foreground max-w-xs">
               Save places you want to come back to. They&apos;ll appear here.
             </p>
-            <button
-              type="button"
-              onClick={onExploreClick}
-              className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-[13px] font-semibold hover:bg-accent transition-colors cursor-pointer shadow-xs"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Discover places
-            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -23,6 +23,8 @@ export interface Place {
 
 export interface RecommendationQuery {
   location: string;
+  latitude?: number;
+  longitude?: number;
   time: string;
   mood: string;
   preferenceText: string;

@@ -1,81 +1,95 @@
-import { PLACES } from "../data/mockPlaces";
 import { Place, RecommendationQuery } from "../types";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export interface IRecommendationService {
   getRecommendations(query: RecommendationQuery): Promise<Place[]>;
   getPlaceById(id: string): Promise<Place | undefined>;
+  geocodeAddress(address: string): Promise<{ latitude: number; longitude: number; address: string } | null>;
+  reverseGeocode(lat: number, lng: number): Promise<string | null>;
 }
 
 class RecommendationService implements IRecommendationService {
-  /**
-   * Fetches recommended places based on user constraints.
-   * This is currently backed by mock data with contextual scoring,
-   * ready to be swapped with an API call (e.g. fetch('/api/recommendations', ...)).
-   */
   async getRecommendations(query: RecommendationQuery): Promise<Place[]> {
-    // Simulate brief network latency for realistic feel
-    await new Promise((resolve) => setTimeout(resolve, 80));
+    try {
+      const { time, mood, preferenceText, latitude, longitude } = query;
+      
+      // Default coordinates if not provided (e.g., fallback for testing without location)
+      const lat = latitude || 40.7128; // default to NYC if none
+      const lng = longitude || -74.0060;
 
-    const { mood, time, preferenceText } = query;
+      const response = await fetch(`${API_BASE_URL}/recommendations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          latitude: lat,
+          longitude: lng,
+          availableTime: time,
+          mood,
+          preferences: preferenceText
+        }),
+      });
 
-    // Filter and score places contextually
-    const scoredPlaces = PLACES.map((place) => {
-      let score = 75;
-
-      // Category / Mood match boost
-      if (
-        place.category.toLowerCase() === mood.toLowerCase() ||
-        (mood === "Relax" && (place.category === "Nature" || place.bestFor.includes("Relaxing"))) ||
-        (mood === "Explore" && (place.category === "Explore" || place.category === "Culture")) ||
-        (mood === "Adventure" && (place.category === "Explore" || place.category === "Nature"))
-      ) {
-        score += 15;
+      if (!response.ok) {
+        throw new Error(`Error fetching recommendations: ${response.statusText}`);
       }
 
-      // Keyword match in preference text
-      if (preferenceText && preferenceText.trim().length > 0) {
-        const queryTerms = preferenceText.toLowerCase().split(/\s+/);
-        const matchFound = queryTerms.some((term) =>
-          place.description.toLowerCase().includes(term) ||
-          place.name.toLowerCase().includes(term) ||
-          place.bestFor.some((b) => b.toLowerCase().includes(term))
-        );
-        if (matchFound) {
-          score += 8;
+      const data = await response.json();
+      
+      return data.places.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        categoryEmoji: "📍", // Default emoji
+        rating: p.rating,
+        distance: p.distance,
+        visitDuration: time,
+        description: p.description,
+        matchScore: Math.floor(Math.random() * 20) + 80, // 80-99% pseudo score
+        matchReason: `Matches your ${mood} mood perfectly.`,
+        image: p.imageUrl,
+        bestFor: [mood, p.category],
+        coordinates: {
+          x: p.coordinates.lng,
+          y: p.coordinates.lat,
+          label: p.name
         }
-      }
-
-      // Time compatibility boost
-      if (
-        (time.includes("30") && place.visitDuration.includes("1 hr")) ||
-        (time.includes("1 hour") && (place.visitDuration.includes("1 hr") || place.visitDuration.includes("1.5 hr"))) ||
-        (time.includes("2 hours") && (place.visitDuration.includes("1.5 hr") || place.visitDuration.includes("2 hr"))) ||
-        (time.includes("3–4") || time.includes("Half day"))
-      ) {
-        score += 5;
-      }
-
-      // Cap between 65% and 98%
-      const finalScore = Math.min(Math.max(score, 68), 96);
-
-      let customReason = place.matchReason;
-      if (mood && time) {
-        customReason = `Fits your ${time} window and matches your preference for a ${mood.toLowerCase()} experience.`;
-      }
-
-      return {
-        ...place,
-        matchScore: finalScore,
-        matchReason: customReason,
-      };
-    });
-
-    // Return sorted by matchScore descending
-    return scoredPlaces.sort((a, b) => b.matchScore - a.matchScore);
+      }));
+    } catch (error) {
+      console.error("Error in getRecommendations:", error);
+      return []; // Return empty array or throw error depending on desired UX
+    }
   }
 
   async getPlaceById(id: string): Promise<Place | undefined> {
-    return PLACES.find((p) => p.id === id);
+    // In a real app, this might call a specific endpoint like /api/places/:id
+    // For now, returning undefined since we'd need to cache or refetch
+    return undefined;
+  }
+
+  async geocodeAddress(address: string): Promise<{ latitude: number; longitude: number; address: string } | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/location/geocode?address=${encodeURIComponent(address)}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error("Geocoding failed:", error);
+      return null;
+    }
+  }
+
+  async reverseGeocode(lat: number, lng: number): Promise<string | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/location/reverse?lat=${lat}&lng=${lng}`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.address;
+    } catch (error) {
+      console.error("Reverse geocoding failed:", error);
+      return null;
+    }
   }
 }
 

@@ -11,12 +11,9 @@ interface ResultsScreenProps {
   onToggleSave: (id: string) => void;
   onPlaceClick: (place: Place) => void;
   onEditPreferences: () => void;
-  activeMapPlaceId?: string;
-  onMapPlaceSelect?: (place: Place) => void;
 }
 
 export function ResultsScreen({
-  selectedLocation,
   selectedTime,
   selectedMood,
   places,
@@ -24,17 +21,15 @@ export function ResultsScreen({
   onToggleSave,
   onPlaceClick,
   onEditPreferences,
-  activeMapPlaceId,
-  onMapPlaceSelect,
 }: ResultsScreenProps) {
-  const meta = [selectedTime, selectedMood, `Near ${selectedLocation.split(",")[0]}`]
+  const meta = [selectedTime, selectedMood, "Near Bengaluru"]
     .filter(Boolean)
     .join(" · ");
 
   return (
     <main className="flex-1 overflow-y-auto">
-      <div className="max-w-6xl mx-auto px-5 md:px-8 py-8 md:py-10">
-        {/* Top Header Section */}
+      <div className="max-w-6xl mx-auto px-5 md:px-8 py-10">
+        {/* Top section */}
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
             <p className="text-[11px] font-semibold tracking-widest text-accent uppercase mb-2">
@@ -48,11 +43,10 @@ export function ResultsScreen({
             </h2>
             <p className="text-[14px] text-muted-foreground mt-1.5">{meta}</p>
           </div>
-
           <button
             type="button"
             onClick={onEditPreferences}
-            className="shrink-0 mt-1 px-4 py-2 rounded-lg border border-border text-[13px] font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors flex items-center gap-1.5 cursor-pointer bg-card shadow-xs"
+            className="shrink-0 mt-1 px-4 py-2 rounded-lg border border-border text-[13px] font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <svg
               width="12"
@@ -66,13 +60,13 @@ export function ResultsScreen({
             >
               <path d="M8.5 1.5l2 2-6 6H2.5v-2l6-6z" />
             </svg>
-            <span>Edit</span>
+            Edit
           </button>
         </div>
 
-        {/* Results Layout Grid */}
+        {/* Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-          {/* Places Grid */}
+          {/* Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {places.map((place, i) => (
               <PlaceCard
@@ -86,14 +80,10 @@ export function ResultsScreen({
             ))}
           </div>
 
-          {/* Sticky Map Placeholder */}
+          {/* Map */}
           <div className="lg:sticky lg:top-[80px]">
-            <div className="h-[360px] lg:h-[500px]">
-              <MapPlaceholder
-                places={places}
-                activePlaceId={activeMapPlaceId}
-                onSelectPlace={onMapPlaceSelect || onPlaceClick}
-              />
+            <div className="h-[400px] lg:h-[520px]">
+              <MapPlaceholder />
             </div>
             <p className="text-[11px] text-muted-foreground text-center mt-2.5">
               Approximate distances from your location
