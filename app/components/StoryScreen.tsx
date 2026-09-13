@@ -108,50 +108,50 @@ export function StoryScreen({
   };
 
   return (
-    <main className="min-h-[calc(100vh-4.5rem)] w-full max-w-full overflow-x-hidden flex-1 flex flex-col justify-center py-6 sm:py-10 px-3 sm:px-6 lg:px-8 relative selection:bg-emerald-500 selection:text-black">
+    <main className="w-full flex-1 flex flex-col justify-start pt-4 pb-12 px-4 sm:px-6 lg:px-8 relative selection:bg-emerald-500 selection:text-black overflow-x-hidden">
       {/* Background Ambient Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 right-10 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="max-w-3xl w-full mx-auto">
         {/* Header Title Section */}
-        <div className="text-center mb-8 pt-2">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[12px] font-bold tracking-wider uppercase mb-3 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-            <span className="text-[14px]">✨</span>
+        <div className="text-center mb-6 sm:mb-8 pt-2">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] sm:text-[12px] font-bold tracking-wider uppercase mb-3 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+            <span className="text-[13px] sm:text-[14px]">✨</span>
             <span>The Scene Setter Console</span>
           </div>
           <h1
-            className="text-[36px] sm:text-[48px] font-extrabold text-white tracking-tight leading-tight"
+            className="text-[28px] sm:text-[40px] md:text-[48px] font-extrabold text-white tracking-tight leading-tight px-2"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Craft Your Next <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300">Adventure</span>
           </h1>
-          <p className="text-white/60 text-[15px] sm:text-[16px] max-w-lg mx-auto mt-2">
+          <p className="text-white/60 text-[14px] sm:text-[16px] max-w-lg mx-auto mt-2 px-4">
             Tell us where you are, your window of time, and the energy you crave.
           </p>
         </div>
 
         {/* Console Card */}
-        <div className="bg-white/[0.04] border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden divide-y divide-white/10">
-          
+        <div className="bg-white/[0.04] border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden divide-y divide-white/10">
+
           {/* 1. GEOLOCATION STATUS BAR */}
-          <div className="p-6 sm:p-7 bg-white/[0.02] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-[22px] shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+          <div className="p-4 sm:p-7 bg-white/[0.02] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-3.5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-[18px] sm:text-[22px] shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
                 📍
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-emerald-400">
                     Target Location
                   </span>
                   {latitude && longitude && (
-                    <span className="text-[10px] text-white/40 font-mono">
+                    <span className="text-[9px] sm:text-[10px] text-white/40 font-mono">
                       ({latitude.toFixed(2)}, {longitude.toFixed(2)})
                     </span>
                   )}
                 </div>
-                <h2 className="text-[18px] sm:text-[20px] font-bold text-white tracking-tight truncate max-w-md">
+                <h2 className="text-[16px] sm:text-[20px] font-bold text-white tracking-tight truncate max-w-[220px] xs:max-w-[280px] sm:max-w-md">
                   {selectedLocation}
                 </h2>
               </div>
@@ -160,7 +160,7 @@ export function StoryScreen({
             <button
               type="button"
               onClick={() => setIsLocationModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-[13px] font-bold text-white transition-all duration-200 cursor-pointer self-start sm:self-center hover:scale-[1.02] active:scale-95 flex items-center gap-2"
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-[13px] font-bold text-white transition-all duration-200 cursor-pointer flex items-center gap-2 active:scale-95"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -171,35 +171,34 @@ export function StoryScreen({
           </div>
 
           {/* 2. AVAILABLE TIME PILLS */}
-          <div className="p-6 sm:p-7">
+          <div className="p-4 sm:p-7">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <label className="text-[12px] font-extrabold uppercase tracking-widest text-white/90 block">
+                <label className="text-[11px] sm:text-[12px] font-extrabold uppercase tracking-widest text-white/90 block">
                   Available Time
                 </label>
-                <p className="text-[13px] text-white/50">
-                  How much free time can you dedicate to this mission?
+                <p className="text-[12px] sm:text-[13px] text-white/50">
+                  How much free time can you dedicate?
                 </p>
               </div>
-              <span className="text-[12px] font-bold text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+              <span className="text-[11px] sm:text-[12px] font-bold text-emerald-400 font-mono bg-emerald-500/10 px-2 sm:px-2.5 py-1 rounded-lg border border-emerald-500/20">
                 {selectedTime}
               </span>
             </div>
 
-            <div className="flex flex-wrap gap-2.5 pt-1">
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-2.5 pt-1">
               {TIME_OPTIONS.map((t) => (
                 <button
                   key={t.label}
                   type="button"
                   onClick={() => setSelectedTime(t.label)}
-                  className={`px-5 py-3 rounded-2xl text-[14px] font-semibold border transition-all duration-300 cursor-pointer select-none flex flex-col items-center gap-0.5 hover:scale-[1.03] active:scale-95 ${
-                    selectedTime === t.label
+                  className={`px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-[13px] sm:text-[14px] font-semibold border transition-all duration-200 cursor-pointer select-none flex flex-col items-center justify-center gap-0.5 active:scale-95 ${selectedTime === t.label
                       ? "bg-emerald-500 text-emerald-950 font-bold border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.35)] ring-2 ring-emerald-400/40"
                       : "bg-white/[0.04] text-white/80 border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.08] hover:text-white"
-                  }`}
+                    }`}
                 >
-                  <span className="font-extrabold text-[15px]">{t.label}</span>
-                  <span className={`text-[10px] uppercase tracking-wider font-semibold ${selectedTime === t.label ? "text-emerald-900" : "text-white/40"}`}>
+                  <span className="font-extrabold text-[14px] sm:text-[15px]">{t.label}</span>
+                  <span className={`text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold ${selectedTime === t.label ? "text-emerald-900" : "text-white/40"}`}>
                     {t.desc}
                   </span>
                 </button>
@@ -208,37 +207,36 @@ export function StoryScreen({
           </div>
 
           {/* 3. MOOD/VIBE SELECTOR PILLS */}
-          <div className="p-6 sm:p-7">
+          <div className="p-4 sm:p-7">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <label className="text-[12px] font-extrabold uppercase tracking-widest text-white/90 block">
+                <label className="text-[11px] sm:text-[12px] font-extrabold uppercase tracking-widest text-white/90 block">
                   Mood & Vibe Persona
                 </label>
-                <p className="text-[13px] text-white/50">
-                  What sensational frequency are you tuning into right now?
+                <p className="text-[12px] sm:text-[13px] text-white/50">
+                  What sensational frequency are you tuning into?
                 </p>
               </div>
-              <span className="text-[12px] font-bold text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+              <span className="text-[11px] sm:text-[12px] font-bold text-emerald-400 font-mono bg-emerald-500/10 px-2 sm:px-2.5 py-1 rounded-lg border border-emerald-500/20">
                 {selectedMood}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
+            <div className="grid grid-cols-2 xs:grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-1">
               {MOOD_OPTIONS.map((m) => (
                 <button
                   key={m.label}
                   type="button"
                   onClick={() => setSelectedMood(m.label)}
-                  className={`p-3.5 rounded-2xl border text-left transition-all duration-300 cursor-pointer select-none flex items-center gap-3 hover:scale-[1.02] active:scale-95 ${
-                    selectedMood.toLowerCase() === m.label.toLowerCase()
+                  className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-left transition-all duration-200 cursor-pointer select-none flex items-center gap-3 active:scale-95 ${selectedMood.toLowerCase() === m.label.toLowerCase()
                       ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-emerald-950 font-bold border-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.4)] ring-2 ring-emerald-400/40"
                       : "bg-white/[0.04] text-white/80 border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.08] hover:text-white"
-                  }`}
+                    }`}
                 >
-                  <span className="text-[24px]">{m.icon}</span>
+                  <span className="text-[20px] sm:text-[24px]">{m.icon}</span>
                   <div>
-                    <div className="font-extrabold text-[15px] leading-snug">{m.label}</div>
-                    <div className={`text-[11px] ${selectedMood.toLowerCase() === m.label.toLowerCase() ? "text-emerald-950/80 font-medium" : "text-white/40"}`}>
+                    <div className="font-extrabold text-[14px] sm:text-[15px] leading-snug">{m.label}</div>
+                    <div className={`text-[10px] sm:text-[11px] ${selectedMood.toLowerCase() === m.label.toLowerCase() ? "text-emerald-950/80 font-medium" : "text-white/40"}`}>
                       {m.desc}
                     </div>
                   </div>
@@ -248,41 +246,41 @@ export function StoryScreen({
           </div>
 
           {/* 4. PREFERENCE & CTA */}
-          <div className="p-6 sm:p-7 bg-white/[0.02]">
-            <label className="text-[12px] font-extrabold uppercase tracking-widest text-white/90 block mb-1">
+          <div className="p-4 sm:p-7 bg-white/[0.02]">
+            <label className="text-[11px] sm:text-[12px] font-extrabold uppercase tracking-widest text-white/90 block mb-1">
               Specific Quirks or Desires <span className="font-normal text-white/40 lowercase">(optional)</span>
             </label>
-            <p className="text-[13px] text-white/50 mb-3">
-              Give your local radar extra nuance (e.g. &ldquo;quiet cafe with view, pet friendly&rdquo;).
+            <p className="text-[12px] sm:text-[13px] text-white/50 mb-3">
+              Give your local radar extra nuance (e.g. &ldquo;quiet cafe with view&rdquo;).
             </p>
 
-            <div className="relative mb-5">
+            <div className="relative mb-4 sm:mb-5">
               <input
                 type="text"
                 value={preferenceText}
                 onChange={(e) => setPreferenceText(e.target.value)}
-                placeholder="e.g. quiet cafe with view, pet friendly, rooftop seating..."
-                className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-3.5 text-[15px] text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 transition-all shadow-inner"
+                placeholder="e.g. quiet cafe with view, pet friendly..."
+                className="w-full bg-black/40 border border-white/15 rounded-xl sm:rounded-2xl px-3.5 sm:px-4 py-3 sm:py-3.5 text-[14px] sm:text-[15px] text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 transition-all shadow-inner"
               />
               {preferenceText && (
                 <button
                   type="button"
                   onClick={() => setPreferenceText("")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-[12px] font-bold p-1 rounded-md"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-[12px] font-bold p-1 rounded-md"
                 >
                   Clear
                 </button>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5 mb-7">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/40 mr-1">Inspirations:</span>
-              {["Outdoor garden", "Great coffee & books", "Sunset viewpoint", "Historic architecture"].map((tag) => (
+            <div className="flex flex-wrap items-center gap-1.5 mb-6">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white/40 mr-1 w-full xs:w-auto">Inspirations:</span>
+              {["Outdoor garden", "Great coffee", "Sunset view", "Historic"].map((tag) => (
                 <button
                   key={tag}
                   type="button"
                   onClick={() => setPreferenceText(preferenceText ? `${preferenceText}, ${tag}` : tag)}
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
+                  className="text-[10px] sm:text-[11px] font-semibold px-2 sm:px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
                 >
                   +{tag}
                 </button>
@@ -292,7 +290,7 @@ export function StoryScreen({
             <button
               type="button"
               onClick={onFindSpot}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300 text-emerald-950 font-black text-[17px] tracking-wide hover:shadow-[0_0_35px_rgba(16,185,129,0.5)] transition-all duration-300 hover:scale-[1.01] active:scale-98 flex items-center justify-center gap-3 cursor-pointer shadow-xl group"
+              className="w-full py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300 text-emerald-950 font-black text-[16px] sm:text-[17px] tracking-wide active:scale-98 transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer shadow-xl group"
             >
               <span>Find My Spot</span>
               <svg
@@ -317,16 +315,17 @@ export function StoryScreen({
 
       {/* Geolocation Modal */}
       {isLocationModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#121A15] text-white w-full max-w-md rounded-3xl shadow-2xl border border-white/15 overflow-hidden">
-            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-[#121A15] text-white w-full max-w-md rounded-2xl sm:rounded-3xl shadow-2xl border border-white/15 overflow-hidden max-h-[90vh] flex flex-col my-auto">
+            <div className="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
               <div>
-                <h3 className="font-extrabold text-[18px] text-white">Target Your Location</h3>
-                <p className="text-[12px] text-white/50 mt-0.5">Roamly scans real local spots within this radar perimeter</p>
+                <h3 className="font-extrabold text-[16px] sm:text-[18px] text-white">Target Your Location</h3>
+                <p className="text-[11px] sm:text-[12px] text-white/50 mt-0.5">Roamly scans real local spots within this radar perimeter</p>
               </div>
               <button
+                type="button"
                 onClick={() => setIsLocationModalOpen(false)}
-                className="text-white/50 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                className="text-white/50 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors cursor-pointer shrink-0"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12" />
@@ -334,11 +333,12 @@ export function StoryScreen({
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
               <button
+                type="button"
                 onClick={handleUseCurrentLocation}
                 disabled={isLocating}
-                className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 transition-all disabled:opacity-50 cursor-pointer font-bold text-[14px] shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+                className="w-full flex items-center justify-center gap-3 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 transition-all disabled:opacity-50 cursor-pointer font-bold text-[13px] sm:text-[14px]"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
@@ -349,7 +349,7 @@ export function StoryScreen({
 
               <div className="relative flex items-center py-1">
                 <div className="flex-grow border-t border-white/10"></div>
-                <span className="flex-shrink-0 mx-4 text-white/40 text-[11px] uppercase tracking-widest font-bold">Or enter city/area</span>
+                <span className="flex-shrink-0 mx-3 sm:mx-4 text-white/40 text-[10px] sm:text-[11px] uppercase tracking-widest font-bold">Or enter city/area</span>
                 <div className="flex-grow border-t border-white/10"></div>
               </div>
 
@@ -362,12 +362,13 @@ export function StoryScreen({
                     if (e.key === "Enter") handleManualLocationSubmit();
                   }}
                   placeholder="e.g. Indiranagar, Bengaluru or Soho, London"
-                  className="w-full bg-black/50 border border-white/15 rounded-2xl px-4 py-3.5 text-[14px] text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-400 transition-all"
+                  className="w-full bg-black/50 border border-white/15 rounded-xl sm:rounded-2xl px-4 py-3 sm:py-3.5 text-[14px] text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-400 transition-all"
                 />
                 <button
+                  type="button"
                   onClick={handleManualLocationSubmit}
                   disabled={isLocating || !manualLocation.trim()}
-                  className="w-full py-3.5 bg-white text-black font-extrabold rounded-2xl text-[14px] hover:bg-white/90 transition-all disabled:opacity-50 cursor-pointer shadow-lg"
+                  className="w-full py-3 sm:py-3.5 bg-white text-black font-extrabold rounded-xl sm:rounded-2xl text-[14px] hover:bg-white/90 transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-95"
                 >
                   {isLocating ? "Pinpointing Radar..." : "Confirm New Location"}
                 </button>
