@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Roamly — Make the most of your time",
+  title: "Roamly — Smart Local Place Recommendation",
   description: "Lightweight local place recommendation app. Tell us how much time you have and what you're in the mood for.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/Roamly-Logo.avif",
   },
 };
 

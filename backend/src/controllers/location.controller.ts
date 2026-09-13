@@ -18,11 +18,14 @@ export const geocode = async (req: Request, res: Response) => {
         address: result.display_name,
       });
     } else {
-      return res.status(404).json({ error: 'Location not found' });
+      return res.status(400).json({ error: 'Unable to pinpoint selected geolocation. Please enter a valid address manually.' });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Geocoding error:', error);
-    return res.status(500).json({ error: 'Internal server error during geocoding' });
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+      return res.status(503).json({ error: 'Geolocation service is temporarily unavailable. Please try again later.' });
+    }
+    return res.status(400).json({ error: 'Unable to pinpoint selected geolocation. Please enter a valid address manually.' });
   }
 };
 
@@ -39,10 +42,13 @@ export const reverse = async (req: Request, res: Response) => {
     if (address) {
       return res.json({ address });
     } else {
-      return res.status(404).json({ error: 'Address not found for these coordinates' });
+      return res.status(400).json({ error: 'Unable to pinpoint selected geolocation. Please enter a valid address manually.' });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Reverse geocoding error:', error);
-    return res.status(500).json({ error: 'Internal server error during reverse geocoding' });
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+      return res.status(503).json({ error: 'Reverse geolocation service is temporarily unavailable. Please try again later.' });
+    }
+    return res.status(400).json({ error: 'Unable to pinpoint selected geolocation. Please enter a valid address manually.' });
   }
 };

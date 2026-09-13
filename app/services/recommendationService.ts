@@ -11,19 +11,20 @@ export interface IRecommendationService {
 
 // Helper to map UI time string to backend's required format
 const mapTimeToBackendFormat = (timeStr: string): string => {
-  const normalized = timeStr.toLowerCase().replace(/\s+/g, '_');
-  if (normalized.includes('1') || normalized === '1_hour') return '1_hour';
-  if (normalized.includes('3') || normalized === '3_hours') return '3_hours';
-  if (normalized.includes('half') || normalized === 'half_day') return 'half_day';
-  if (normalized.includes('full') || normalized === 'full_day') return 'full_day';
-  return '3_hours'; // Fallback default
+  const normalized = (timeStr || '').toLowerCase().replace(/[\s_-]+/g, '');
+  if (normalized.includes('30m') || normalized.includes('30min')) return '30min';
+  if (normalized.includes('1h') || normalized.includes('1hour') || normalized === '1') return '1_hour';
+  if (normalized.includes('3h') || normalized.includes('3hour') || normalized === '3') return '3_hours';
+  if (normalized.includes('half')) return 'half_day';
+  if (normalized.includes('full')) return 'full_day';
+  return timeStr || '3_hours';
 }; 
 
 class RecommendationService implements IRecommendationService {
 
 async getRecommendations(query: RecommendationQuery): Promise<Place[]> {
   try {
-    const { time, mood, preferenceText, latitude, longitude } = query;
+    const { time, mood, preferenceText, latitude, longitude, location } = query;
     
     const lat = latitude ?? 40.7128;
     const lng = longitude ?? -74.0060;
@@ -36,14 +37,27 @@ async getRecommendations(query: RecommendationQuery): Promise<Place[]> {
       body: JSON.stringify({
         latitude: Number(lat),
         longitude: Number(lng),
-        availableTime: mapTimeToBackendFormat(time || '3_hours'), // Matches backend expectations
-        mood: mood || 'relaxed',
+        availableTime: mapTimeToBackendFormat(time || '3h'),
+        mood: mood || 'relax',
+        preferenceText: preferenceText || "",
         preferences: preferenceText || "",
+        location: location || "",
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+      let serverErrorMessage = `Server error: ${response.status} ${response.statusText}`;
+      try {
+        const errorJson = await response.json();
+        if (errorJson && errorJson.error) {
+          serverErrorMessage = errorJson.error;
+        }
+      } catch {
+        // Ignore json parse failure on error response
+      }
+      const err = new Error(serverErrorMessage);
+      (err as any).status = response.status;
+      throw err;
     }
 
     const data = await response.json();
@@ -53,21 +67,22 @@ async getRecommendations(query: RecommendationQuery): Promise<Place[]> {
       id: p.id,
       name: p.name,
       category: p.category || "Point of Interest",
-      categoryEmoji: "📍",
+      categoryEmoji: p.categoryEmoji || "📍",
       rating: p.rating || 4.5,
       distance: p.distance || "Nearby",
-      visitDuration: time,
-      description: p.description,
-      matchScore: Math.floor(Math.random() * 20) + 80,
-      matchReason: `Matches your ${mood} mood perfectly.`,
-      image: p.image || "/placeholder-place.jpg",
-      bestFor: [mood, p.category].filter(Boolean),
-      latitude: p.coordinates?.lat || lat,
-      longitude: p.coordinates?.lng || lng,
-      // Use backend-provided coordinates (x, y)
+      visitDuration: p.visitDuration || time,
+      description: p.description || "",
+      matchScore: p.matchScore || Math.floor(Math.random() * 15) + 84,
+      matchReason: p.matchReason || `Matches your ${mood} mood perfectly.`,
+      image: p.image || p.imageUrl || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&fit=crop&auto=format",
+      bestFor: p.bestFor || [mood, p.category].filter(Boolean),
+      latitude: p.latitude ?? p.coordinates?.lat ?? p.coordinates?.y ?? lat,
+      longitude: p.longitude ?? p.coordinates?.lng ?? p.coordinates?.x ?? lng,
       coordinates: {
-        x: p.coordinates?.x ?? p.longitude ?? lng,
-        y: p.coordinates?.y ?? p.latitude ?? lat,
+        x: p.coordinates?.x ?? p.coordinates?.lng ?? p.longitude ?? lng,
+        y: p.coordinates?.y ?? p.coordinates?.lat ?? p.latitude ?? lat,
+        lat: p.coordinates?.lat ?? p.coordinates?.y ?? p.latitude ?? lat,
+        lng: p.coordinates?.lng ?? p.coordinates?.x ?? p.longitude ?? lng,
         label: p.name,
       },
     }));

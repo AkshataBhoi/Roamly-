@@ -1,4 +1,4 @@
-export type Screen = "home" | "results" | "detail" | "saved";
+export type Screen = "home" | "story" | "results" | "detail" | "saved";
 
 export interface Place {
   id: string;

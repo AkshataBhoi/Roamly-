@@ -1,10 +1,15 @@
 import axios from 'axios';
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
-const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
 
-// Ensure a user agent is set as required by Nominatim's and Overpass API's usage policies
-const HEADERS = {
+// Primary & fallback public Overpass endpoints to handle timeouts and 503 errors gracefully
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
+export const API_HEADERS = {
   'User-Agent': 'RoamlyApp/1.0 (Student Project)',
 };
 
@@ -22,7 +27,7 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult | n
         format: 'json',
         limit: 1,
       },
-      headers: HEADERS,
+      headers: API_HEADERS,
     });
 
     if (response.data && response.data.length > 0) {
@@ -43,7 +48,7 @@ export const reverseGeocode = async (lat: number, lon: number): Promise<string |
         lon,
         format: 'json',
       },
-      headers: HEADERS,
+      headers: API_HEADERS,
     });
 
     if (response.data && response.data.display_name) {
@@ -63,39 +68,150 @@ export interface OverpassNode {
   tags: Record<string, string>;
 }
 
+export interface MoodFilterConfig {
+  amenity?: string[];
+  tourism?: string[];
+  leisure?: string[];
+  historic?: string[];
+  craft?: string[];
+  shop?: string[];
+}
+
+/**
+ * Maps frontend mood options to comprehensive OpenStreetMap multi-tag filters
+ */
+export const getAmenitiesForMood = (mood: string): MoodFilterConfig => {
+  const normalizedMood = (mood || '').toLowerCase().trim();
+
+  switch (normalizedMood) {
+    case 'relax':
+    case 'relaxed':
+      return {
+        amenity: ['cafe', 'library', 'spa', 'tea_house'],
+        leisure: ['park', 'garden', 'nature_reserve'],
+      };
+
+    case 'explore':
+      return {
+        tourism: ['artwork', 'attraction', 'viewpoint'],
+        amenity: ['marketplace', 'bookshop'],
+        leisure: ['park'],
+      };
+
+    case 'nature':
+      return {
+        leisure: ['park', 'garden', 'nature_reserve'],
+        tourism: ['viewpoint', 'campsite'],
+      };
+
+    case 'food':
+    case 'hungry':
+      return {
+        amenity: ['restaurant', 'cafe', 'food_court', 'fast_food', 'pub', 'ice_cream', 'bakery'],
+      };
+
+    case 'adventure':
+    case 'adventurous':
+      return {
+        leisure: ['sports_centre', 'pitch', 'track', 'playground'],
+        tourism: ['theme_park', 'zoo'],
+      };
+
+    case 'culture':
+    case 'cultured':
+      return {
+        tourism: ['museum', 'gallery', 'attraction'],
+        historic: ['monument', 'castle', 'ruins', 'memorial'],
+        amenity: ['theatre', 'arts_centre', 'cinema'],
+      };
+
+    default:
+      return {
+        amenity: ['cafe', 'restaurant'],
+        leisure: ['park', 'garden'],
+        tourism: ['attraction', 'viewpoint'],
+      };
+  }
+};
+
+/**
+ * Fetches nearby places from Overpass API across multiple tag keys with mirror fallbacks
+ */
 export const searchNearbyPlaces = async (
   lat: number,
   lon: number,
   radius: number, // in meters
-  amenities: string[]
+  filterConfig: MoodFilterConfig | string[]
 ): Promise<OverpassNode[]> => {
-  // Build Overpass QL query
-  const amenityRegex = amenities.join('|');
+  let config: MoodFilterConfig;
+  if (Array.isArray(filterConfig)) {
+    config = { amenity: filterConfig };
+  } else {
+    config = filterConfig;
+  }
+
+  const clauses: string[] = [];
+  const tagEntries: Array<[keyof MoodFilterConfig, string[] | undefined]> = [
+    ['amenity', config.amenity],
+    ['tourism', config.tourism],
+    ['leisure', config.leisure],
+    ['historic', config.historic],
+    ['craft', config.craft],
+    ['shop', config.shop],
+  ];
+
+  for (const [tagKey, values] of tagEntries) {
+    if (values && values.length > 0) {
+      const regex = values.join('|');
+      clauses.push(`node["${tagKey}"~"^(${regex})$"](around:${radius},${lat},${lon});`);
+      clauses.push(`way["${tagKey}"~"^(${regex})$"](around:${radius},${lat},${lon});`);
+    }
+  }
+
+  if (clauses.length === 0) {
+    clauses.push(`node["amenity"](around:${radius},${lat},${lon});`);
+  }
+
   const query = `
-    [out:json];
+    [out:json][timeout:15];
     (
-      node["amenity"~"${amenityRegex}"](around:${radius},${lat},${lon});
-      node["tourism"~"${amenityRegex}"](around:${radius},${lat},${lon});
-      node["leisure"~"${amenityRegex}"](around:${radius},${lat},${lon});
+      ${clauses.join('\n      ')}
     );
-    out center;
+    out center 40;
   `;
 
-  try {
-    const response = await axios.post(OVERPASS_API_URL, `data=${encodeURIComponent(query)}`, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': HEADERS['User-Agent'], // 💡 FIX: Include User-Agent header here
-        'Accept': 'application/json',
-      },
-    });
+  // Try endpoints sequentially in case of rate limits or 503 timeouts
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const response = await axios.post(endpoint, `data=${encodeURIComponent(query)}`, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': API_HEADERS['User-Agent'],
+          'Accept': 'application/json',
+        },
+        timeout: 5000,
+      });
 
-    if (response.data && response.data.elements) {
-      return response.data.elements.filter((el: any) => el.tags && el.tags.name);
+      if (response.data && Array.isArray(response.data.elements)) {
+        const elements: OverpassNode[] = response.data.elements
+          .filter((el: any) => el && el.tags && (el.tags.name || el.tags['name:en']))
+          .map((el: any) => ({
+            id: el.id,
+            lat: Number(typeof el.lat === 'number' ? el.lat : el.center?.lat),
+            lon: Number(typeof el.lon === 'number' ? el.lon : el.center?.lon),
+            tags: el.tags,
+          }))
+          .filter((el: OverpassNode) => !isNaN(el.lat) && !isNaN(el.lon));
+
+        return elements;
+      }
+    } catch (error: any) {
+      console.warn(`Overpass endpoint failed (${endpoint}):`, error.message || error);
     }
-    return [];
-  } catch (error) {
-    console.error('Error in searchNearbyPlaces:', error);
-    throw new Error('Failed to fetch nearby places from Overpass API');
   }
+
+  // If all Overpass servers fail, flag upstream error for HTTP 503 response
+  const upstreamErr = new Error('Overpass API timeout or network error');
+  (upstreamErr as any).isUpstream = true;
+  throw upstreamErr;
 };

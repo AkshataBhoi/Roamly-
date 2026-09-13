@@ -13,23 +13,23 @@ export function BookmarkButton({
         onToggle();
       }}
       aria-label={saved ? "Remove from saved" : "Save place"}
-      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer backdrop-blur-md border hover:scale-110 active:scale-90 ${
         saved
-          ? "bg-primary text-primary-foreground"
-          : "bg-secondary text-muted-foreground hover:bg-muted hover:text-foreground"
+          ? "bg-amber-400 text-black border-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.5)]"
+          : "bg-black/50 text-white/80 border-white/20 hover:bg-black/80 hover:text-white"
       }`}
     >
       <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
         fill={saved ? "currentColor" : "none"}
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M3 2h8a1 1 0 011 1v8.5l-5-3-5 3V3a1 1 0 011-1z" />
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
       </svg>
     </button>
   );
