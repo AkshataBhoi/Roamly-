@@ -110,8 +110,7 @@ exports.getAmenitiesForMood = getAmenitiesForMood;
 /**
  * Fetches nearby places from Overpass API across multiple tag keys with mirror fallbacks
  */
-const searchNearbyPlaces = async (lat, lon, radius, // in meters
-filterConfig) => {
+const searchNearbyPlaces = async (lat, lon, radius, filterConfig) => {
     let config;
     if (Array.isArray(filterConfig)) {
         config = { amenity: filterConfig };
@@ -138,13 +137,16 @@ filterConfig) => {
     if (clauses.length === 0) {
         clauses.push(`node["amenity"](around:${radius},${lat},${lon});`);
     }
+
+    // 💡 Extended Overpass engine timeout from 15s to 30s
     const query = `
-    [out:json][timeout:15];
+    [out:json][timeout:30];
     (
       ${clauses.join('\n      ')}
     );
     out center 40;
   `;
+
     // Try endpoints sequentially in case of rate limits or 503 timeouts
     for (const endpoint of OVERPASS_ENDPOINTS) {
         try {
@@ -154,7 +156,8 @@ filterConfig) => {
                     'User-Agent': exports.API_HEADERS['User-Agent'],
                     'Accept': 'application/json',
                 },
-                timeout: 5000,
+                // 💡 Extended Axios client timeout from 10000ms (10s) to 35000ms (35s)
+                timeout: 35000,
             });
             if (response.data && Array.isArray(response.data.elements)) {
                 const elements = response.data.elements
@@ -178,4 +181,5 @@ filterConfig) => {
     upstreamErr.isUpstream = true;
     throw upstreamErr;
 };
+// exports.searchNearbyPlaces = searchNearbyPlaces;
 exports.searchNearbyPlaces = searchNearbyPlaces;

@@ -8,9 +8,20 @@
       "root": "backend",
       "framework": "express",
       "entrypoint": "src/index.ts"
+    },
+    "ml": {
+      "root": "ml",
+      "entrypoint": "app.py"
     }
   },
   "rewrites": [
+    {
+      "source": "/ml/(.*)",
+      "destination": {
+        "type": "service",
+        "service": "ml"
+      }
+    },
     {
       "source": "/api/(.*)",
       "destination": {

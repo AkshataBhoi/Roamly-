@@ -1,6 +1,15 @@
 import { Place, RecommendationQuery } from "../types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+// In production, always use relative /api rewrites configured in vercel.json.
+// In local development, fall back to process.env.NEXT_PUBLIC_API_URL or http://localhost:5000/api
+const getApiBaseUrl = (): string => {
+  if (process.env.NODE_ENV === 'production') {
+    return '/api';
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface IRecommendationService {
   getRecommendations(query: RecommendationQuery): Promise<Place[]>;
@@ -72,7 +81,7 @@ async getRecommendations(query: RecommendationQuery): Promise<Place[]> {
       distance: p.distance || "Nearby",
       visitDuration: p.visitDuration || time,
       description: p.description || "",
-      matchScore: p.matchScore || Math.floor(Math.random() * 15) + 84,
+      matchScore: p.matchScore !== undefined && p.matchScore !== null ? p.matchScore : 85,
       matchReason: p.matchReason || `Matches your ${mood} mood perfectly.`,
       image: p.image || p.imageUrl || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&fit=crop&auto=format",
       bestFor: p.bestFor || [mood, p.category].filter(Boolean),

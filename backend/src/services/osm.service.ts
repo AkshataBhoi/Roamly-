@@ -173,7 +173,7 @@ export const searchNearbyPlaces = async (
   }
 
   const query = `
-    [out:json][timeout:15];
+    [out:json][timeout:30];
     (
       ${clauses.join('\n      ')}
     );
@@ -189,7 +189,7 @@ export const searchNearbyPlaces = async (
           'User-Agent': API_HEADERS['User-Agent'],
           'Accept': 'application/json',
         },
-        timeout: 5000,
+        timeout: 35000,
       });
 
       if (response.data && Array.isArray(response.data.elements)) {

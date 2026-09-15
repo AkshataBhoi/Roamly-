@@ -1,28 +1,29 @@
 import { Request, Response } from 'express';
 import { searchNearbyPlaces, getAmenitiesForMood, OverpassNode, API_HEADERS } from '../services/osm.service';
+import { buildPlaceFeatures, predictSuitabilityBatch, extractCity } from '../services/ml.service';
 
 // Map time to search radius (meters) and calculate compatibility
 const parseTimeLogic = (timeInput: string) => {
   const normalized = (timeInput || '').toLowerCase().replace(/[\s_-]+/g, '');
   
   if (normalized.includes('30m') || normalized.includes('30min')) {
-    return { key: '30m', radius: 1500, label: '30 min', longWindow: false };
+    return { key: '30m', radius: 1500, label: '30 min', longWindow: false, availableTimeMin: 30 };
   }
   if (normalized.includes('1h') || normalized.includes('1hour') || normalized === '1') {
-    return { key: '1h', radius: 2500, label: '1 hour', longWindow: false };
+    return { key: '1h', radius: 2500, label: '1 hour', longWindow: false, availableTimeMin: 60 };
   }
   if (normalized.includes('3h') || normalized.includes('3hour') || normalized.includes('2h') || normalized === '3') {
-    return { key: '3h', radius: 4000, label: '3 hours', longWindow: false };
+    return { key: '3h', radius: 4000, label: '3 hours', longWindow: false, availableTimeMin: 180 };
   }
   if (normalized.includes('half')) {
-    return { key: 'half_day', radius: 10000, label: 'Half day', longWindow: true };
+    return { key: 'half_day', radius: 10000, label: 'Half day', longWindow: true, availableTimeMin: 300 };
   }
   if (normalized.includes('full')) {
-    return { key: 'full_day', radius: 25000, label: 'Full day', longWindow: true };
+    return { key: 'full_day', radius: 25000, label: 'Full day', longWindow: true, availableTimeMin: 480 };
   }
 
   // Fallback defaults
-  return { key: '3h', radius: 4000, label: '3 hours', longWindow: false };
+  return { key: '3h', radius: 4000, label: '3 hours', longWindow: false, availableTimeMin: 180 };
 };
 
 // Normalize mood
@@ -291,12 +292,67 @@ export const getRecommendations = async (req: Request, res: Response) => {
       });
     }
 
-    // Take top candidates
-    const topCandidates = scoredNodes.slice(0, 24);
+    // Take candidates for scoring
+    const candidatesToScore = scoredNodes.slice(0, 30);
+    const city = extractCity(locationLabel);
+
+    // Build feature vector for ML model
+    const featuresList = candidatesToScore.map(({ node, distKm, prefScore }) =>
+      buildPlaceFeatures(
+        node,
+        city,
+        normalizedMood,
+        timeConfig.availableTimeMin,
+        timeConfig.radius,
+        distKm,
+        prefScore
+      )
+    );
+
+    // Call ML batch prediction
+    const mlPredictions = await predictSuitabilityBatch(featuresList);
+
+    let finalCandidates: Array<{
+      node: OverpassNode;
+      prefScore: number;
+      distKm: number;
+      suitabilityProbability: number;
+      isML: boolean;
+    }>;
+
+    if (mlPredictions && mlPredictions.length === candidatesToScore.length) {
+      console.log('ML prediction succeeded');
+      finalCandidates = candidatesToScore.map((candidate, idx) => ({
+        ...candidate,
+        suitabilityProbability: mlPredictions[idx].suitability_probability,
+        isML: true,
+      }));
+
+      // Rank candidates primarily by ML suitability probability, then preference score, then distance
+      finalCandidates.sort((a, b) => {
+        if (b.suitabilityProbability !== a.suitabilityProbability) {
+          return b.suitabilityProbability - a.suitabilityProbability; // Higher suitability first
+        }
+        if (b.prefScore !== a.prefScore) {
+          return b.prefScore - a.prefScore;
+        }
+        return a.distKm - b.distKm;
+      });
+    } else {
+      console.warn('ML prediction failed -> fallback used');
+      finalCandidates = candidatesToScore.map((candidate) => ({
+        ...candidate,
+        suitabilityProbability: -1,
+        isML: false,
+      }));
+    }
+
+    // Take top 24 final recommendations
+    const topCandidates = finalCandidates.slice(0, 24);
 
     // 6. Real-Time Dynamic Image Resolution Pipeline
     const formattedPlaces = await Promise.all(
-      topCandidates.map(async ({ node, prefScore, distKm }) => {
+      topCandidates.map(async ({ node, prefScore, distKm, suitabilityProbability, isML }) => {
         const primaryCategory =
           node.tags.amenity ||
           node.tags.tourism ||
@@ -313,11 +369,30 @@ export const getRecommendations = async (req: Request, res: Response) => {
         // Resolve real dynamic place image asynchronously
         const image = await fetchRealPlaceImage(placeName, primaryCategory, node.tags, node.id, locationLabel.split(',')[0].trim());
 
-        const matchScore = Math.min(99, Math.max(75, 80 + prefScore + (node.id % 10)));
-        const matchReason =
-          prefScore > 0
-            ? `Matches your ${normalizedMood} vibe and caters directly to your preference for "${rawPreferences.trim()}".`
-            : `Selected as a top authentic ${primaryCategory.replace(/_/g, ' ')} match within your ${timeConfig.label} window.`;
+        // Use ML suitability probability converted to a 0–100 integer score if ML succeeded; else use fallback
+        let matchScore: number;
+        let matchReason: string;
+
+        if (isML && suitabilityProbability >= 0) {
+          matchScore = Math.max(0, Math.min(100, Math.round(suitabilityProbability * 100)));
+          if (matchScore >= 85) {
+            matchReason = `High suitability match for your ${normalizedMood} vibe and ${timeConfig.label} window.`;
+          } else if (matchScore >= 65) {
+            matchReason = `Good match for your ${normalizedMood} mood within ${timeConfig.label}.`;
+          } else {
+            matchReason = `Alternative match for ${normalizedMood} in your area.`;
+          }
+          if (prefScore > 0 && rawPreferences.trim()) {
+            matchReason += ` Fits preferences: "${rawPreferences.trim()}".`;
+          }
+        } else {
+          // Failure fallback ONLY
+          matchScore = Math.min(99, Math.max(75, 80 + prefScore + (node.id % 10)));
+          matchReason =
+            prefScore > 0
+              ? `Matches your ${normalizedMood} vibe and caters directly to your preference for "${rawPreferences.trim()}".`
+              : `Selected as a top authentic ${primaryCategory.replace(/_/g, ' ')} match within your ${timeConfig.label} window.`;
+        }
 
         const description =
           node.tags.description ||
