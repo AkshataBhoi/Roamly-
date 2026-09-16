@@ -1,12 +1,19 @@
 import { Place, RecommendationQuery } from "../types";
 
-// In production, always use relative /api rewrites configured in vercel.json.
-// In local development, fall back to process.env.NEXT_PUBLIC_API_URL or http://localhost:5000/api
+// Production uses the relative /api path handled by Vercel.
+// Local development uses NEXT_PUBLIC_API_URL from .env.local.
 const getApiBaseUrl = (): string => {
-  if (process.env.NODE_ENV === 'production') {
-    return '/api';
+  if (process.env.NODE_ENV === "production") {
+    return "/api";
   }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+  const url = process.env.NEXT_PUBLIC_API_URL;
+
+  if (!url) {
+    throw new Error("NEXT_PUBLIC_API_URL is not configured");
+  }
+
+  return url;
 };
 
 const API_BASE_URL = getApiBaseUrl();
