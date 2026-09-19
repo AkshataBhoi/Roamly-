@@ -1,4 +1,5 @@
 # Virtual environments
+.vercel/
 .venv/
 venv/
 env/
