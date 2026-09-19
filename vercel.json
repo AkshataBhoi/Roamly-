@@ -14,11 +14,6 @@
       "entrypoint": "app.py"
     }
   },
-  "functions": {
-    "backend/src/index.ts": {
-      "includeFiles": "backend/node_modules/**"
-    }
-  },
   "rewrites": [
     {
       "source": "/ml/(.*)",
