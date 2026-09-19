@@ -20,10 +20,9 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-}
+// Always listen so Vercel Services can bind to the allocated port
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 export default app;
