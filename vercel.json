@@ -7,7 +7,7 @@
     "backend": {
       "root": "backend",
       "framework": "express",
-      "entrypoint": "dist/index.ts"
+      "entrypoint": "dist/index.js"
     },
     "ml": {
       "root": "ml",
